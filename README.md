@@ -233,3 +233,78 @@ npx cap open android
 
 ![image](https://github.com/user-attachments/assets/e62cdf60-dbdc-4a6d-a28f-c199a0ce75c9)
 
+## Automation
+
+Add a bash file to automate the process for CI/CD
+
+```
+#!/bin/bash
+
+# Defaults
+BUILD_PATH="./dist/capgo-updates-ota/browser"
+CONFIGS_ROOT="../capgo-configs"
+UPDATES_FOLDER="$CONFIGS_ROOT/updates"
+APP_ID="com.example.overtheair"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    --version)
+      VERSION="$2"
+      shift
+      shift
+      ;;
+    *)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$VERSION" ]; then
+  echo "❌ Please provide a version with --version, e.g., ./bundle-update.sh --version 1.0.0"
+  exit 1
+fi
+
+ZIP_NAME="${APP_ID}_${VERSION}.zip"
+
+# 1. Check if build folder exists
+if [ ! -d "$BUILD_PATH" ]; then
+  echo "❌ Build folder '$BUILD_PATH' does not exist. Please run 'ng build' first."
+  exit 1
+fi
+
+# 2. Run Capgo CLI to create the bundle
+echo "🔄 Bundling with Capgo CLI..."
+npx @capgo/cli bundle zip --path "$BUILD_PATH" --name "$ZIP_NAME"
+if [ $? -ne 0 ]; then
+  echo "❌ Capgo CLI bundling failed."
+  exit 1
+fi
+
+# 3. Ensure updates folder exists
+mkdir -p "$UPDATES_FOLDER"
+
+# 4. Move zip to updates folder
+echo "🚚 Moving bundle to $UPDATES_FOLDER"
+mv "$ZIP_NAME" "$UPDATES_FOLDER/"
+
+# 5. Delete old bundles in updates folder (keep only the new one)
+echo "🧹 Deleting old bundles in $UPDATES_FOLDER"
+find "$UPDATES_FOLDER" -type f -name "${APP_ID}_*.zip" ! -name "$ZIP_NAME" -delete
+
+# 6. Update capacitor.config.json with the new URL
+CONFIG_FILE="$CONFIGS_ROOT/capacitor.config.json"
+RAW_URL="https://raw.githubusercontent.com/harikrishhkk/capgo-configs/main/updates/$ZIP_NAME"
+
+echo "🔄 Updating $CONFIG_FILE with new bundle URL"
+echo "\"$RAW_URL\"" > "$CONFIG_FILE"
+
+echo "✅ capacitor.config.json updated with:"
+echo "$RAW_URL"
+
+```
+chmod +x bundle-update.sh
+./bundle-update.sh --version 1.0.0
+```
