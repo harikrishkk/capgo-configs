@@ -294,15 +294,15 @@ mv "$ZIP_NAME" "$UPDATES_FOLDER/"
 echo "🧹 Deleting old bundles in $UPDATES_FOLDER"
 find "$UPDATES_FOLDER" -type f -name "${APP_ID}_*.zip" ! -name "$ZIP_NAME" -delete
 
-# 6. Update capacitor.config.json with the new URL
+# 6. Update capacitor.config.json with the new version and URL
 CONFIG_FILE="$CONFIGS_ROOT/capacitor.config.json"
 RAW_URL="https://raw.githubusercontent.com/harikrishhkk/capgo-configs/main/updates/$ZIP_NAME"
 
-echo "🔄 Updating $CONFIG_FILE with new bundle URL"
-echo "\"$RAW_URL\"" > "$CONFIG_FILE"
+echo "🔄 Updating $CONFIG_FILE with new version and bundle URL"
+echo "{ \"version\": \"$VERSION\", \"url\": \"$RAW_URL\" }" > "$CONFIG_FILE"
 
 echo "✅ capacitor.config.json updated with:"
-echo "$RAW_URL"
+cat "$CONFIG_FILE"
 
 ```
 and to give proper permissions to the bash file 
