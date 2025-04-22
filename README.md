@@ -305,6 +305,11 @@ echo "✅ capacitor.config.json updated with:"
 echo "$RAW_URL"
 
 ```
+and to give proper permissions to the bash file 
+
+```
 chmod +x bundle-update.sh
+
+// now execute the command
 ./bundle-update.sh --version 1.0.0
 ```
